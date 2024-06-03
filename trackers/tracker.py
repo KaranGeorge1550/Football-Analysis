@@ -4,6 +4,7 @@ import supervision as sv
 import pickle
 import os
 import sys
+import numpy as np
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width
 
@@ -117,6 +118,35 @@ class Tracker:
 
         return frame
     
+    def draw_triangle(self, frame, bounding_box, color):
+        y = int(bounding_box[1])
+        x,_ = get_center_of_bbox(bounding_box)
+
+        triangle_points = np.array([
+            [x.y],
+            [x-10, y-20],
+            [x+10, y-20]
+        ], np.int32)
+
+        cv2.drawContours(
+            frame,
+            [triangle_points],
+            0,
+            color,
+            cv2.FILLED
+        )
+
+        # Draw border for triangle
+        cv2.drawContours(
+            frame,
+            [triangle_points],
+            0,
+            (0,0,0),
+            2
+        )
+
+        return frame
+    
     def draw_annotations(self, frames, tracks):
         output_frames = []
         for frame_num, in enumerate(frames):
@@ -128,12 +158,16 @@ class Tracker:
 
             # Draw players
             for tracker_id, player in player_dict.items():
-                frame = self.draw_ellipse(frame, player["bounding_box"], (0, 255, 0), tracker_id)
+                frame = self.draw_ellipse(frame, player["bounding_box"], (0, 0, 255), tracker_id)
 
             # Draw referees
             for tracker_id, referee in referee_dict.items():
                 frame = self.draw_ellipse(frame, referee["bounding_box"], (0, 255, 255))
             
+            # Draw ball
+            for ball in ball_dict.values():
+                frame = self.draw_triangle(frame, ball["bounding_box"], (0, 255, 0))
+
             output_frames.append(frame)
 
         return output_frames
