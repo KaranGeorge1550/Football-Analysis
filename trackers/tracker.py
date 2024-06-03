@@ -100,9 +100,14 @@ class Tracker:
             ball_dict = tracks["ball"][frame_num]
             referee_dict = tracks["referees"][frame_num]
 
+            # Draw players
             for tracker_id, player in player_dict.items():
                 frame = self.draw_ellipse(frame, player["bounding_box"], (0, 255, 0), tracker_id)
 
+            # Draw referees
+            for tracker_id, referee in referee_dict.items():
+                frame = self.draw_ellipse(frame, referee["bounding_box"], (0, 255, 255), tracker_id)
+            
             output_frames.append(frame)
 
         return output_frames
