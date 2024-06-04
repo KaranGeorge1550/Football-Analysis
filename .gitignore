@@ -163,3 +163,4 @@ cython_debug/
 input_videos/
 *.pt
 Hockey-13/
+.vscode/
