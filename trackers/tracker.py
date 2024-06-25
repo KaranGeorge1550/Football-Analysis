@@ -19,6 +19,7 @@ class Tracker:
         for i in range(0, len(frames), batch_size):
             detections_batch = self.model.predict(frames[i:i+batch_size],conf=0.1)
             detections += detections_batch
+        return detections
     
     def get_object_tracks(self, frame_num, read_from_path=False, path=None):
 
@@ -37,14 +38,14 @@ class Tracker:
 
          #Overwrite goalkeeper class with player class
         for frame_num, detection in enumerate(detections):
-            class_names = detections.names
+            class_names = detection.names
             class_names_inverse = {v: k for k, v in class_names.items()}
 
             # To supervision detection
             detection_supervision = sv.Detections.from_ultralytics(detection)
 
             # Goalkeeper to player
-            for object, class_id in detection_supervision.classes.items():
+            for object, class_id in enumerate(detection_supervision.class_id):
                 if class_names[class_id] == 'goalkeeper':
                     detection_supervision.class_id[object] = class_names_inverse['player']
 
@@ -55,10 +56,10 @@ class Tracker:
             tracks["ball"].append({})
             tracks["referees"].append({})
 
-            for frame_num in detection_tracking:
-                bounding_box = frame_num[0].tolist()
-                class_id = frame_num[3]
-                tracker_id = frame_num[4]
+            for frame in detection_tracking:
+                bounding_box = frame[0].tolist()
+                class_id = frame[3]
+                tracker_id = frame[4]
 
                 if class_id == class_names_inverse['player']:
                     tracks["players"][frame_num][tracker_id] = {"bounding_box":bounding_box}
@@ -111,7 +112,7 @@ class Tracker:
                 f"{tracker_id}",
                 (x1_rect, y1_rect+15),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6
+                0.6,
                 (0,0,0),
                 2
             )
@@ -123,7 +124,7 @@ class Tracker:
         x,_ = get_center_of_bbox(bounding_box)
 
         triangle_points = np.array([
-            [x.y],
+            [x,y],
             [x-10, y-20],
             [x+10, y-20]
         ], np.int32)
@@ -149,7 +150,7 @@ class Tracker:
     
     def draw_annotations(self, frames, tracks):
         output_frames = []
-        for frame_num, in enumerate(frames):
+        for frame_num, frame in enumerate(frames):
             frame = frame.copy()
 
             player_dict = tracks["players"][frame_num]

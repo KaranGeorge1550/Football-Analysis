@@ -4,7 +4,7 @@ from trackers import Tracker
 
 def main():
     # Read video
-    video_frames = read_video('input_videos/hockey_input1.mp4')
+    video_frames = read_video('input_videos/bundesliga_clip.mp4')
 
     # Initialise tracker
     tracker = Tracker('models/best.pt')
