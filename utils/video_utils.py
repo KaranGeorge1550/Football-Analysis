@@ -1,3 +1,4 @@
+import pickle
 import cv2
 
 def read_video(video_path):
@@ -10,9 +11,20 @@ def read_video(video_path):
         frames.append(frame)
     return frames
 
-def save_video(output_video_frames, output_video_path):
+def save_video(cache_path, width, height, output_video_path):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(output_video_path, fourcc, 24, (output_video_frames[0].shape[1], output_video_frames[0].shape[0])) # width, height
-    for frame in output_video_frames:
+    out = cv2.VideoWriter(output_video_path, fourcc, 24, (width, height)) # width, height
+    for frame in load_frames_generator(cache_path):
         out.write(frame)
     out.release()
+
+def load_frames_generator(cache_path):
+    with open(cache_path, 'rb') as file:
+        while True:
+            try:
+                loaded_batch = pickle.load(file)
+                for frame in loaded_batch:
+                    yield frame
+                loaded_batch.clear()
+            except EOFError:
+                break
