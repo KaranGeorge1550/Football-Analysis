@@ -13,10 +13,15 @@ def main():
                                        path='tracks/tracks.pkl')
     
     # Draw annotations
-    output_frames = tracker.draw_annotations(video_frames, tracks)
+    print("Drawing annotations...")
+    cache_path = 'tracks/frames.pkl'
+    width, height = tracker.draw_annotations(video_frames, tracks, cache_path)
+
 
     # Save video
-    save_video(output_frames, 'output_videos/output_vid.avi')
+    print("Saving video...")
+    output_path = 'output_videos/output_vid.avi'
+    save_video(cache_path, width, height, output_path)
 
 
 if __name__ == "__main__":

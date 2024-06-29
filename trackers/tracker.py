@@ -1,6 +1,7 @@
 import cv2
 from ultralytics import YOLO
 import supervision as sv
+from itertools import batched
 import pickle
 import os
 import sys
@@ -148,27 +149,47 @@ class Tracker:
 
         return frame
     
-    def draw_annotations(self, frames, tracks):
-        output_frames = []
-        for frame_num, frame in enumerate(frames):
-            frame = frame.copy()
+    def draw_annotations(self, frames, tracks, cache_path):
+        batch_size = 20
+        width = frames[0].shape[1]
+        height = frames[0].shape[0]
 
-            player_dict = tracks["players"][frame_num]
-            ball_dict = tracks["ball"][frame_num]
-            referee_dict = tracks["referees"][frame_num]
+        cache_path = 'tracks/frames.pkl'
+        if os.path.exists(cache_path):
+            return width, height
 
-            # Draw players
-            for tracker_id, player in player_dict.items():
-                frame = self.draw_ellipse(frame, player["bounding_box"], (0, 0, 255), tracker_id)
+        frame_num = 0
+        print (f"Processing {len(frames)} frames")
 
-            # Draw referees
-            for tracker_id, referee in referee_dict.items():
-                frame = self.draw_ellipse(frame, referee["bounding_box"], (0, 255, 255))
+        batched_frames = batched(frames, batch_size)
+        for frame_batch in batched_frames:
+            temp_frames = [] 
+            for frame in frame_batch:
+                frame = frame.copy()
+
+                player_dict = tracks["players"][frame_num]
+                ball_dict = tracks["ball"][frame_num]
+                referee_dict = tracks["referees"][frame_num]
+
+                # Draw players
+                for tracker_id, player in player_dict.items():
+                    frame = self.draw_ellipse(frame, player["bounding_box"], (0, 0, 255), tracker_id)
+
+                # Draw referees
+                for tracker_id, referee in referee_dict.items():
+                    frame = self.draw_ellipse(frame, referee["bounding_box"], (0, 255, 255))
+                
+                # Draw ball
+                for ball in ball_dict.values():
+                    frame = self.draw_triangle(frame, ball["bounding_box"], (0, 255, 0))
+
+                temp_frames.append(frame)
+                frame_num += 1
             
-            # Draw ball
-            for ball in ball_dict.values():
-                frame = self.draw_triangle(frame, ball["bounding_box"], (0, 255, 0))
+            with open(cache_path, 'ab') as file:
+                    pickle.dump(temp_frames, file)
+                    temp_frames.clear()
 
-            output_frames.append(frame)
+            print (f"Processed {frame_num} frames")
 
-        return output_frames
+        return width, height
