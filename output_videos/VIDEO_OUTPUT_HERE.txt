@@ -1,0 +1,1 @@
+Rendered videos are outputed here as an AVI.
