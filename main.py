@@ -1,10 +1,15 @@
+import sys
 from utils import read_video, save_video
 from trackers import Tracker
 
 
 def main():
+    # Get first argument
+    video_path = sys.argv[1]
+
+
     # Read video
-    video_frames = read_video('input_videos/bundesliga_clip.mp4')
+    video_frames = read_video('input_videos/' + video_path)
 
     # Initialise tracker
     tracker = Tracker('models/best.pt')
